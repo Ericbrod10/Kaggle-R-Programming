@@ -1,7 +1,4 @@
 
-
-
-
 # load libraries
 require(plyr)
 require(data.table)
@@ -46,9 +43,6 @@ na.cols <- sort(colSums(sapply(Train[na.cols], is.na)), decreasing = TRUE)
 paste('There are', length(na.cols), 'columns with missing values')
 
 
-
-
-
 ####
 sel.cols = c("imdb_id","budget","original_language","popularity","spoken_languages",
              "production_countries","genres","runtime","tagline_nword",
@@ -56,7 +50,6 @@ sel.cols = c("imdb_id","budget","original_language","popularity","spoken_languag
              "crewlen_nword_div","homepage_hasNA","collection_hasNA",
              "tag_length","keywords_len","year","month","weekday","week",
              "p_comp_len","dayofweek2","cast_nword")
-
 
 
 ######### Correct Year Data ##################
@@ -71,9 +64,6 @@ year.fun = function(x){
     return(paste0("19",x))
   }
 }
-
-
-
 
 Train = Train %>% 
   mutate(year = year(date.format),
@@ -168,15 +158,9 @@ train = train[,9:ncol(train)]
 Train = cbind(Train,train)
 rm(train)
 
-
-
-
-
-
 Train$rating <- c(rep(NA, times = nrow(Train)))
 Train$totalVotes <- c(rep(NA, times = nrow(Train))) 
 Train$imdb_id <- as.character(Train$imdb_id)
-
 
 #gathering IMDB votes and rating data with html Wrangling 
 Get_IMDB_Data <- function(X){
@@ -193,9 +177,7 @@ Get_IMDB_Data <- function(X){
         next
       }
       else {
-        
         rating_data_html <- html_nodes(webpage,'.imdbRating')
-        
         rating_data <- html_text(rating_data_html)
         rating_data <- gsub(c('\n')," ",rating_data)
         rating_data <- gsub('/'," ",rating_data)
@@ -216,22 +198,14 @@ Get_IMDB_Data <- function(X){
           X['rating'][i,] <- Rating
           X['totalVotes'][i,] <- Votes
           print(i)
-          
-          
-          
         }
-        
       }
-      
-      
     }
     else{
       next
     }
-    
   }
   return(X)
-  
 }
 
 
@@ -277,7 +251,6 @@ GetMetaScoreAndRuntime <- function(X){
         Awards_data <- unlist(strsplit(Awards_data, "(z){5}"))
         X['Awards'][i,] <- Awards_data[14]
         
-        
         #Runtime
         Runtime_html <- html_nodes(webpage,'body')
         Runtime_data <- gsub('","',"zzzzz",Runtime_html)
@@ -286,7 +259,6 @@ GetMetaScoreAndRuntime <- function(X){
         Runtime_data <- gsub('Runtime":"',"",Runtime_data)
         Runtime_data <- gsub(' min',"",Runtime_data)
         X['runtime1'][i,] <- Runtime_data[1]
-        
         
         #metascore
         IMDB_data_html <- html_nodes(webpage,'body')
@@ -308,11 +280,6 @@ GetMetaScoreAndRuntime <- function(X){
 }
 
 
-
-
-
-
-Z <- A
 
 Train <- GetMetaScoreAndRuntime(Train)
 
@@ -344,15 +311,7 @@ A[A$imdb_id== "tt0116485", "runtime1"] <- 90
 
 Train <- merge(Train, A[,c(1,3)], by.x = "imdb_id", by.y = "imdb_id", all.x = TRUE)
 
-
-
 Train$runtime <- as.numeric(Train$runtime)
-
-
-
-
-
-Train <- read.csv("TrainXGBModData.csv")
 
 Train <- merge(Train, Train1[,c(1,6)], by.x = "imdb_id", by.y = "imdb_id")
 
@@ -369,10 +328,6 @@ Train[grep('N/A', Train$Awards), 'Awards'] <- 0
 Train$Awards <- as.numeric(Train$Awards)
 
 
-
-
-
-
 ## few interactions
 Train$fe2 = Train$budget / Train$popularity
 Train$fe3 = Train$budget / (Train$year* Train$year)
@@ -386,12 +341,6 @@ Train_test <- Train[(length(train.id)+1):nrow(Train),]
 
 label2 = log1p(label)
 #####
-
-
-
-
-
-
 
 dtrain <- xgb.DMatrix(as.matrix(Train_train), label = label2)
 dtest <- xgb.DMatrix(as.matrix(Train_test))
